@@ -1,4 +1,4 @@
-// Two compatibility shims
+// Compatibility shims
 if (!String.prototype.trim) {
   String.prototype.trim = function () {
       return this.replace(/^\s+|\s+$/g,'');
@@ -10,6 +10,14 @@ if (!String.prototype.trimRight) {
       return this.replace(/\s+$/,'');
     };
 }
+
+if (!Array.isArray) {
+  Array.isArray = function (vArg) {
+      return Object.prototype.toString.call(vArg) === "[object Array]";
+    };
+}
+
+const debugState = false;
 
 /**
 *
@@ -160,8 +168,14 @@ const usefulFields = ["birthyear", "c", "cn", "description",
     "mobile", "mozillaHomeCountryName", "mozillaHomeLocalityName",
     "mozillaHomePostalCode", "mozillaHomeState", "mozillaHomeStreet",
     "mozillaHomeUrl", "mozillaNickname", "o", "sn", "st", "street",
-    "telephoneNumber", "title"
+    "telephoneNumber", "title", "givenname", "objectclass"
     ];
+
+function debug(str) {
+  if (debugState) {
+    print(str);
+  }
+}
 
 /**
  * parse LDIF string into JavaScript Object
@@ -178,18 +192,64 @@ const usefulFields = ["birthyear", "c", "cn", "description",
  *   - ignores < links
  */
 function parseLDIF(inStr) {
-  var record = {}, key, value, splitLine, colon_idx,
+  var record = {},
+      key = "",
+      value = null,
+      splitLine = [],
+      colon_idx = 0,
       out_records = [];
+
+  function handleAdding(key, value) {
+    value = value ? value.trim() : "";
+
+    // base64 encoded value
+    if (value[0] === ":") {
+      value = Base64.decode(value.slice(1).trim());
+    }
+
+    if (key && (usefulFields.indexOf(key) != -1) &&
+         value.length > 0) {
+      if (key in this) {
+        if (Array.isArray(this[key])) {
+          this[key].push(value);
+        }
+        else {
+          this[key] = new Array(this[key]);
+          this[key].push(value);
+        }
+      }
+      else {
+        this[key] = value;
+      }
+    }
+
+    key = "";
+    value = null;
+  }
+
+  record.add = handleAdding;
 
   inStr.forEach(function (line) {
       if (line != undefined) {
         line = line.trim();
 
-        if (line.length === 0) {
-          if (Object.keys(record).length > 0) {
-            out_records.push(record);
-            record = {};
+        if (line.length == 0) {
+          // > 1, because we have always .add property
+          if (Object.keys(record).length > 1) {
+            record.add(key, value);
+            delete record.add;
+
+            if (record.objectclass &&
+              (record.objectclass === "person" ||
+               record.objectclass.indexOf("person") !== -1)) {
+                delete record.objectclass;
+                out_records.push(record);
+            }
           }
+          record = {};
+          record.add = handleAdding;
+          key = "";
+          value = null;
         }
         else {
           // comment line
@@ -208,26 +268,19 @@ function parseLDIF(inStr) {
             // should be at least compatible for reading of RFC LDIF
             // files (so it doesn’t hurt)
             if (colon_idx == -1) {
-              // TODO
-              // The question is whether we shouldn't trim
-              // the result of .decode() function as well.
-              record[key] += Base64.decode(line).trim();
-              return;
+              // multiline value
+              if (line[0] === " ") {
+                line = line.slice(1);
+              }
+              value += line;
             }
             else {
+              record.add(key, value);
+
               key = line.slice(0, colon_idx);
               value = line.slice(colon_idx + 1);
-
-              // base64 encoded value
-              if (value[0] === ":") {
-                value = Base64.decode(value.slice(1));
-              }
             }
 
-            if ((usefulFields.indexOf(key) != -1) &&
-                 value.length > 0) {
-              record[key] = value.trim();
-            }
           }
         }
       }
