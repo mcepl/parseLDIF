@@ -168,7 +168,7 @@ const usefulFields = ["birthyear", "c", "cn", "description",
     "mobile", "mozillaHomeCountryName", "mozillaHomeLocalityName",
     "mozillaHomePostalCode", "mozillaHomeState", "mozillaHomeStreet",
     "mozillaHomeUrl", "mozillaNickname", "o", "sn", "st", "street",
-    "telephoneNumber", "title", "givenname", "objectclass"
+    "telephoneNumber", "title", "objectclass"
     ];
 
 function debug(str) {
@@ -289,7 +289,7 @@ function parseLDIF(inStr) {
   return out_records;
 }
 
-if (arguments.length == 1) {
+if (arguments && arguments.length == 1) {
   var lines = readFile(arguments[0]).replace(/\r\n/g,"\n");
   print(parseLDIF(lines.split("\n")).toSource());
 }
