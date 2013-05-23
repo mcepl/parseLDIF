@@ -1,6 +1,8 @@
-#!/usr/bin/rhino
+#!/usr/bin/node
 
-load("../parseLDIF.js");
+var parse = require("../parseLDIF.js");
+var fs = require("fs");
+var toSource = require('tosource');
 
 Object.prototype.equals = function(x) {
   var p;
@@ -88,19 +90,23 @@ var expResults = {
 };
 
 var resultsCount = Object.keys(expResults).length;
+var success = 0;
 
 for (var key in expResults) {
   if (expResults.hasOwnProperty(key)) {
-    var lines = readFile("example0" + key + ".ldif").replace(/\r\n/g,"\n");
-    observed = parseLDIF(lines.split("\n"));
+    var lines = fs.readFileSync("example0" + key + ".ldif", "utf-8").
+      replace(/\r\n/g,"\n");
+    observed = parse.parseLDIF(lines.split("\n"));
     if (observed.equals(expResults[key])) {
-      print(key + "/" + resultsCount + " ... OK");
+      console.log(key + "/" + resultsCount + " ... OK");
     }
     else {
-      print("Test " + key + " fails! Expected:\n" +
-        expResults[key].toSource() +
-        "\n----\nObserved:\n" + observed.toSource());
+      console.log("Test " + key + " fails! Expected:\n" +
+        toSource(expResults[key]) +
+        "\n----\nObserved:\n" + toSource(observed));
+      success = 1;
     }
   }
 }
 
+process.exit(success);

@@ -163,17 +163,24 @@ var Base64 = {
 
 }
 
+// RFC 2849 uses givenname, RFC 4519 uses givenName, we rather support
+// both
 const usefulFields = ["birthyear", "c", "cn", "description",
     "facsimiletelephonenumber", "givenName", "homePhone", "l", "mail",
     "mobile", "mozillaHomeCountryName", "mozillaHomeLocalityName",
     "mozillaHomePostalCode", "mozillaHomeState", "mozillaHomeStreet",
     "mozillaHomeUrl", "mozillaNickname", "o", "sn", "st", "street",
-    "telephoneNumber", "title", "objectclass"
+    "telephoneNumber", "title", "objectclass", "givenname"
     ];
 
 function debug(str) {
   if (debugState) {
-    print(str);
+    if (console) {
+      console.log(str);
+    }
+    else {
+      print(str);
+    }
   }
 }
 
@@ -188,7 +195,6 @@ function debug(str) {
  *   - doesn’t even consider change requests, only complete values
  *   - doesn’t include version: field (seems to be ignored by
  *     Thunderbird as well).
- *   - ignores multi-value attributes completely
  *   - ignores < links
  */
 function parseLDIF(inStr) {
@@ -289,7 +295,6 @@ function parseLDIF(inStr) {
   return out_records;
 }
 
-if (arguments && arguments.length == 1) {
-  var lines = readFile(arguments[0]).replace(/\r\n/g,"\n");
-  print(parseLDIF(lines.split("\n")).toSource());
+if (exports) {
+  exports.parseLDIF = parseLDIF;
 }

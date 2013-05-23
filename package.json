@@ -1,0 +1,4 @@
+{
+  "name" : "parseLDIF",
+  "main" : "./parseLDIF.js"
+}
