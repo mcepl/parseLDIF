@@ -295,6 +295,6 @@ function parseLDIF(inStr) {
   return out_records;
 }
 
-if (exports) {
+if (exports !== undefined) {
   exports.parseLDIF = parseLDIF;
 }
