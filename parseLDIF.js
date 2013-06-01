@@ -161,16 +161,30 @@ var Base64 = {
     return string;
   }
 
-}
+};
+
+/*
+ * All collected fields in my LDIF file
+
+birthday, birthmonth, birthyear, c, cn, description, dn,
+facsimiletelephonenumber, givenName, homePhone, l, mail,
+mobile, modifytimestamp, mozillaHomeCountryName, mozillaHomeLocalityName,
+mozillaHomePostalCode, mozillaHomeState, mozillaHomeStreet,
+mozillaHomeUrl, mozillaNickname, mozillaSecondEmail,
+mozillaWorkStreet2, mozillaWorkUrl, o, objectclass, ou, postalCode,
+sn, st, street, telephoneNumber, title
+ */
+
 
 // RFC 2849 uses givenname, RFC 4519 uses givenName, we rather support
 // both
-const usefulFields = ["birthyear", "c", "cn", "description",
-    "facsimiletelephonenumber", "givenName", "homePhone", "l", "mail",
-    "mobile", "mozillaHomeCountryName", "mozillaHomeLocalityName",
+const usefulFields = ["birthyear", "birthmonth", "birthday", "c", "cn",
+    "description", "facsimiletelephonenumber", "givenName", "homePhone", "l",
+    "mail", "mobile", "mozillaHomeCountryName", "mozillaHomeLocalityName",
     "mozillaHomePostalCode", "mozillaHomeState", "mozillaHomeStreet",
-    "mozillaHomeUrl", "mozillaNickname", "o", "sn", "st", "street",
-    "telephoneNumber", "title", "objectclass", "givenname"
+    "mozillaHomeUrl", "mozillaNickname", "mozillaSecondEmail",
+    "mozillaWorkStreet2", "mozillaWorkUrl", "o", "ou", "postalCode", "sn",
+    "st", "street", "telephoneNumber", "title", "objectclass", "givenname"
     ];
 
 function debug(str) {
@@ -295,6 +309,11 @@ function parseLDIF(inStr) {
   return out_records;
 }
 
-if (exports !== undefined) {
+if (typeof(exports) !== "undefined") {
   exports.parseLDIF = parseLDIF;
+}
+
+if ((typeof(arguments) !== "undefined") && arguments.length == 1) {
+  var lines = readFile(arguments[0]).replace(/\r\n/g,"\n");
+  print(parseLDIF(lines.split("\n")).toSource());
 }
