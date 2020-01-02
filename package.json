@@ -1,4 +1,4 @@
 {
-  "name" : "parseLDIF",
-  "main" : "./parseLDIF.js"
+  "name": "parseLDIF",
+  "main": "./parseLDIF.js"
 }
